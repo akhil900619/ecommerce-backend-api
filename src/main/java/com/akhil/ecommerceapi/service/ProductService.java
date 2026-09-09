@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.akhil.ecommerceapi.entity.Product;
+import com.akhil.ecommerceapi.exception.ProductNotFoundException;
 import com.akhil.ecommerceapi.repository.ProductRepository;
 
 @Service
@@ -26,7 +27,7 @@ public class ProductService {
     
     public Product getProductById(Long id) {
         return productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+                .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + id));
     }
     
     public List<Product> getAllProducts() {
