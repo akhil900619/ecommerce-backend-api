@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import com.akhil.ecommerceapi.entity.User;
 import com.akhil.ecommerceapi.service.UserService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -26,7 +28,7 @@ public class UserController {
 	}
 
 	@PostMapping("/register")
-	public ResponseEntity<User> registerUser(@RequestBody User user) {
+	public ResponseEntity<User> registerUser(@Valid @RequestBody User user) {
 		User created = userService.registerUser(user);
 		return new ResponseEntity<>(created, HttpStatus.CREATED);
 	}
