@@ -49,5 +49,8 @@ public class Product {
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
+    
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private Boolean active = true;
 
 }

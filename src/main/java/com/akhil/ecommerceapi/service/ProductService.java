@@ -31,7 +31,7 @@ public class ProductService {
     }
     
     public List<Product> getAllProducts() {
-        return productRepository.findAll();
+        return productRepository.findByActiveTrue();
     }
     
     public Product updateProduct(Long id, Product updatedProduct) {
@@ -46,10 +46,16 @@ public class ProductService {
         return productRepository.save(existingProduct);
     }
     
+//    public void deleteProduct(Long id) {
+//    	Product existingProduct = getProductById(id);
+//    	
+//    	productRepository.delete(existingProduct);
+//    }/
+    
     public void deleteProduct(Long id) {
-    	Product existingProduct = getProductById(id);
-    	
-    	productRepository.delete(existingProduct);
+    	Product product = getProductById(id);
+    	product.setActive(false);
+    	productRepository.save(product);
     }
 
 }
