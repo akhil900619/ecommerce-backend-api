@@ -10,6 +10,7 @@ import com.akhil.ecommerceapi.entity.CartItem;
 import com.akhil.ecommerceapi.entity.Product;
 import com.akhil.ecommerceapi.entity.User;
 import com.akhil.ecommerceapi.exception.CartItemNotFoundException;
+import com.akhil.ecommerceapi.exception.InsufficientStockException;
 import com.akhil.ecommerceapi.repository.CartRepository;
 
 @Service
@@ -38,26 +39,57 @@ public class CartService {
         return cartRepository.save(newCart);
     }
     
+//    public Cart addItemToCart(Long userId, Long productId, Integer quantity) {
+//    	Cart cart = getOrCreateCart(userId);
+//    	Product product = productService.getProductById(productId);
+//    	
+//    	Optional<CartItem> existingItem = cart.getItems().stream()
+//    			.filter(item -> item.getProduct().getId().equals(productId))
+//    			.findFirst();
+//    	
+//    	if (existingItem.isPresent()) {
+//    		CartItem item = existingItem.get();
+//    		item.setQuantity(item.getQuantity() + quantity);
+//    	} else {
+//			CartItem newItem = new CartItem();
+//			newItem.setCart(cart);
+//			newItem.setProduct(product);
+//			newItem.setQuantity(quantity);
+//			cart.getItems().add(newItem);
+//		}
+//    	
+//    	return cartRepository.save(cart);
+//    }
+    
     public Cart addItemToCart(Long userId, Long productId, Integer quantity) {
-    	Cart cart = getOrCreateCart(userId);
-    	Product product = productService.getProductById(productId);
-    	
-    	Optional<CartItem> existingItem = cart.getItems().stream()
-    			.filter(item -> item.getProduct().getId().equals(productId))
-    			.findFirst();
-    	
-    	if (existingItem.isPresent()) {
-    		CartItem item = existingItem.get();
-    		item.setQuantity(item.getQuantity() + quantity);
-    	} else {
-			CartItem newItem = new CartItem();
-			newItem.setCart(cart);
-			newItem.setProduct(product);
-			newItem.setQuantity(quantity);
-			cart.getItems().add(newItem);
-		}
-    	
-    	return cartRepository.save(cart);
+        Cart cart = getOrCreateCart(userId);
+        Product product = productService.getProductById(productId);
+
+        Optional<CartItem> existingItem = cart.getItems().stream()
+                .filter(item -> item.getProduct().getId().equals(productId))
+                .findFirst();
+
+        int currentQuantityInCart = existingItem.map(CartItem::getQuantity).orElse(0);
+        int totalRequestedQuantity = currentQuantityInCart + quantity;
+
+        if (product.getStock() < totalRequestedQuantity) {
+            throw new InsufficientStockException(
+                "Only " + product.getStock() + " unit(s) of " + product.getName() + " available"
+            );
+        }
+
+        if (existingItem.isPresent()) {
+            CartItem item = existingItem.get();
+            item.setQuantity(totalRequestedQuantity);
+        } else {
+            CartItem newItem = new CartItem();
+            newItem.setCart(cart);
+            newItem.setProduct(product);
+            newItem.setQuantity(quantity);
+            cart.getItems().add(newItem);
+        }
+
+        return cartRepository.save(cart);
     }
     
     public Cart updateItemQuantity(Long userId, Long cartItemId, Integer newQuantity) {
