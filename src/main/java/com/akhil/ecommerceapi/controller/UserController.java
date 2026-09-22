@@ -1,5 +1,8 @@
 package com.akhil.ecommerceapi.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 //import org.springframework.web.bind.annotation.RequestMapping;
 //import org.springframework.web.bind.annotation.RestController;
 
+import com.akhil.ecommerceapi.dto.LoginRequest;
 import com.akhil.ecommerceapi.entity.User;
 import com.akhil.ecommerceapi.service.UserService;
 
@@ -37,6 +41,15 @@ public class UserController {
 	public ResponseEntity<User> getUserById(@PathVariable Long id) {
 		User user = userService.getUserById(id);
 		return ResponseEntity.ok(user);
+	}
+	
+	@PostMapping("/login")
+	public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest loginRequest) {
+	    String token = userService.login(loginRequest.getEmail(), loginRequest.getPassword());
+
+	    Map<String, String> response = new HashMap<>();
+	    response.put("token", token);
+	    return ResponseEntity.ok(response);
 	}
 
 }

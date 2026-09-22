@@ -8,19 +8,23 @@ import org.springframework.stereotype.Service;
 
 import com.akhil.ecommerceapi.entity.User;
 import com.akhil.ecommerceapi.exception.DuplicateEmailException;
+import com.akhil.ecommerceapi.exception.InvalidCredentialsException;
 import com.akhil.ecommerceapi.exception.UserNotFoundException;
 import com.akhil.ecommerceapi.repository.UserRepository;
+import com.akhil.ecommerceapi.security.JwtUtil;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
 
     public User registerUser(User user) {
@@ -35,6 +39,17 @@ public class UserService {
     public User getUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
+    }
+    
+    public String login(String email, String rawPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+
+        if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
+            throw new InvalidCredentialsException("Invalid email or password");
+        }
+
+        return jwtUtil.generateToken(user.getEmail());
     }
 
 }
