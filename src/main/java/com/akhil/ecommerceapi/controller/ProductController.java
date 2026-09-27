@@ -59,5 +59,11 @@ public class ProductController {
     	productService.deleteProduct(id);
     	return ResponseEntity.noContent().build();
     }
+    
+    @PostMapping("/{id}/generate-description")
+    public ResponseEntity<Product> generateDescription(@PathVariable Long id) {
+        Product updated = productService.generateDescription(id);
+        return ResponseEntity.ok(updated);
+    }
 
 }
