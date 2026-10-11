@@ -6,9 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import com.akhil.ecommerceapi.entity.*;
+import com.akhil.ecommerceapi.event.OrderPlacedEvent;
 import com.akhil.ecommerceapi.exception.InsufficientStockException;
 import com.akhil.ecommerceapi.repository.CartRepository;
 import com.akhil.ecommerceapi.repository.OrderRepository;
@@ -22,13 +24,17 @@ public class OrderService {
 	private final CartRepository cartRepository;
 	private final CartService cartService;
 	private final ProductService productService;
+	private final ApplicationEventPublisher eventPublisher;
+	private final UserService userService;
 	
 	@Autowired
-    public OrderService(OrderRepository orderRepository, CartService cartService, ProductService productService, CartRepository cartRepository) {
+    public OrderService(OrderRepository orderRepository, CartService cartService, ProductService productService, CartRepository cartRepository, ApplicationEventPublisher eventPublisher, UserService userService) {
         this.orderRepository = orderRepository;
         this.cartService = cartService;
         this.productService = productService;
         this.cartRepository = cartRepository;
+        this.userService = userService;
+        this.eventPublisher = eventPublisher;
     }
 
 	@Transactional
@@ -80,6 +86,17 @@ public class OrderService {
         order.setTotalAmount(totalAmount);
 
         Order savedOrder = orderRepository.save(order);
+        
+        // Add kafka event
+
+        User user = userService.getUserById(userId);
+        
+        OrderPlacedEvent event = new OrderPlacedEvent(
+    	    savedOrder.getId(),
+    	    user.getEmail(),
+    	    savedOrder.getTotalAmount()
+    	);
+        eventPublisher.publishEvent(event);
 
         // Step 3: clear the cart now that checkout succeeded
         cart.getItems().clear();
